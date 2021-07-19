@@ -6,7 +6,7 @@ project(usb_host)
 # init Raspberry Pi Pico SDK
 pico_sdk_init()
 
-add_executable(usb_host src/main.cpp src/EPaperDisplay.cpp)
+add_executable(usb_host src/main.cpp src/EPaperHAL.cpp src/EPaperDisplay.cpp)
 
 target_link_libraries(usb_host pico_stdlib hardware_spi)
 

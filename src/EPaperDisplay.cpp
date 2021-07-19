@@ -50,210 +50,84 @@
 
 using namespace Display;
 
-EPaperDisplay::EPaperDisplay(
-    spi_inst_t *spi,
-    uint pin_miso,
-    uint pin_cs,
-    uint pin_scl,
-    uint pin_mosi,
-    uint pin_dc,
-    uint pin_reset,
-    uint pin_busy
-)
+EPaperDisplay::EPaperDisplay(EPaperHAL *hal)
 : width(EPD_WIDTH),
   height(EPD_HEIGHT),
-  _spi(spi),
-  _pin_miso(pin_miso),
-  _pin_cs(pin_cs),
-  _pin_scl(pin_scl),
-  _pin_mosi(pin_mosi),
-  _pin_dc(pin_dc),
-  _pin_reset(pin_reset),
-  _pin_busy(pin_busy)
+  _hal(hal)
 { }
 
 EPaperDisplay::~EPaperDisplay() = default;
 
-uint EPaperDisplay::setup()
-{
-    // Configure SPI
-    spi_init(_spi, 4000 * 1000); // 4Mbps
-    gpio_set_function(_pin_miso, GPIO_FUNC_SPI);
-    gpio_set_function(_pin_scl, GPIO_FUNC_SPI);
-    gpio_set_function(_pin_mosi, GPIO_FUNC_SPI);
-
-    // Configure CS and default high
-    gpio_init(_pin_cs);
-    gpio_set_dir(_pin_cs, GPIO_OUT);
-    gpio_put(_pin_cs, true);
-
-    // Configure DC and Reset pins
-    gpio_init(_pin_dc);
-    gpio_set_dir(_pin_dc, GPIO_OUT);
-    gpio_init(_pin_reset);
-    gpio_set_dir(_pin_reset, GPIO_OUT);
-
-    // Configure Busy pin
-    gpio_init(_pin_busy);
-    gpio_set_dir(_pin_busy, GPIO_IN);
-
-    return 0;
-}
-
-void EPaperDisplay::reset() const
-{
-    gpio_put(_pin_reset, false);
-    sleep_ms(200);
-    gpio_put(_pin_reset, true);
-    sleep_ms(200);
-}
-
-void EPaperDisplay::command(uint8_t cmd)
-{
-    gpio_put(_pin_cs, false);
-    gpio_put(_pin_dc, false);
-    spi_write_blocking(_spi, &cmd, 1);
-    gpio_put(_pin_cs, true);
-}
-void EPaperDisplay::command(uint8_t cmd, uint8_t d1)
-{
-    gpio_put(_pin_cs, false);
-    gpio_put(_pin_dc, false);
-    spi_write_blocking(_spi, &cmd, 1);
-    gpio_put(_pin_dc, true);
-    spi_write_blocking(_spi, &d1, 1);
-    gpio_put(_pin_cs, true);
-}
-void EPaperDisplay::command(uint8_t cmd, uint8_t d1, uint8_t d2)
-{
-    gpio_put(_pin_cs, false);
-    gpio_put(_pin_dc, false);
-    spi_write_blocking(_spi, &cmd, 1);
-    gpio_put(_pin_dc, true);
-    spi_write_blocking(_spi, &d1, 1);
-    spi_write_blocking(_spi, &d2, 1);
-    gpio_put(_pin_cs, true);
-}
-void EPaperDisplay::command(uint8_t cmd, uint8_t d1, uint8_t d2, uint8_t d3)
-{
-    gpio_put(_pin_cs, false);
-    gpio_put(_pin_dc, false);
-    spi_write_blocking(_spi, &cmd, 1);
-    gpio_put(_pin_dc, true);
-    spi_write_blocking(_spi, &d1, 1);
-    spi_write_blocking(_spi, &d2, 1);
-    spi_write_blocking(_spi, &d3, 1);
-    gpio_put(_pin_cs, true);
-}
-void EPaperDisplay::command(uint8_t cmd, uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4)
-{
-    gpio_put(_pin_cs, false);
-    gpio_put(_pin_dc, false);
-    spi_write_blocking(_spi, &cmd, 1);
-    gpio_put(_pin_dc, true);
-    spi_write_blocking(_spi, &d1, 1);
-    spi_write_blocking(_spi, &d2, 1);
-    spi_write_blocking(_spi, &d3, 1);
-    spi_write_blocking(_spi, &d4, 1);
-    gpio_put(_pin_cs, true);
-}
-
-void EPaperDisplay::command_start(uint8_t cmd)
-{
-    gpio_put(_pin_cs, false);
-    gpio_put(_pin_dc, false);
-    spi_write_blocking(_spi, &cmd, 1);
-    gpio_put(_pin_dc, true);
-}
-
-void EPaperDisplay::command_data(uint8_t data)
-{
-    spi_write_blocking(_spi, &data, 1);
-}
-
-void EPaperDisplay::command_data(const uint8_t *data, size_t len)
-{
-    spi_write_blocking(_spi, data, len);
-}
-
-void EPaperDisplay::command_end() const
-{
-    gpio_put(_pin_cs, true);
-}
-
-void EPaperDisplay::waitUntilIdle() const
-{
-    while (gpio_get(_pin_busy)) {
-        sleep_ms(100);
-    }
-}
-
 uint EPaperDisplay::init()
 {
-    if (setup() != 0) {
-        return 1;
-    }
-    reset();
+    _hal->reset();
 
-    command(
-        DRIVER_OUTPUT_CONTROL,
-        0x27,
-        0x01,
-        0x00
-    );
-    command(
-        DATA_ENTRY_MODE_SETTING,
+    SyncTransaction transaction(_hal);
+
+    _hal->command(DRIVER_OUTPUT_CONTROL);
+    _hal->data(0x27, 0x01, 0x00);
+
+    _hal->command(DATA_ENTRY_MODE_SETTING);
+    _hal->data(
         0x03  // Pixel sequence Top Left -> Bottom right
     );
-    command(
-        SET_RAM_X_ADDRESS_START_END_POSITION,
+
+    _hal->command(SET_RAM_X_ADDRESS_START_END_POSITION);
+    _hal->data(
         0x00,  // RAM x address start at 0
         0x12   // RAM x address end at 12h (18+1) * 8 -> 152
     );
-    command(
-        SET_RAM_Y_ADDRESS_START_END_POSITION,
+
+    _hal->command(SET_RAM_Y_ADDRESS_START_END_POSITION);
+    _hal->data(
         0x27,  // RAM y address start at C7h;
         0x01,
         0x00,  // RAM y address end at 00h;
         0x00
     );
-    command(
-        BORDER_WAVEFORM_CONTROL,
+
+    _hal->command(BORDER_WAVEFORM_CONTROL);
+    _hal->data(
         0x01  // HIZ
     );
-    command(
-        DISPLAY_UPDATE_CONTROL_1,
+
+    _hal->command(DISPLAY_UPDATE_CONTROL_1);
+    _hal->data(
         0x00,  // Normal
         0x80   // S8-S167
     );
 
-    command(
-        TEMP_SENSOR_CONTROL,
+    _hal->command(TEMP_SENSOR_CONTROL);
+    _hal->data(
         0x80   // Internal temperature sensor
     );
 
-    command(
-        DISPLAY_UPDATE_CONTROL_2,
+    _hal->command(DISPLAY_UPDATE_CONTROL_2);
+    _hal->data(
         0xB1  // Load Temperature and waveform setting.
     );
 
-    command(MASTER_ACTIVATION);
-    waitUntilIdle();
+    _hal->command(MASTER_ACTIVATION);
 
     return 0;
 }
 
 void EPaperDisplay::sleep()
 {
-    command(DEEP_SLEEP_MODE, 0x01);
-    waitUntilIdle();
+    SyncTransaction transaction(_hal);
+
+    _hal->command(DEEP_SLEEP_MODE);
+    _hal->data(0x01);
 }
 
 void EPaperDisplay::flip()
 {
-    command(DISPLAY_UPDATE_CONTROL_2,0xC7);
-    command(MASTER_ACTIVATION);
-    waitUntilIdle();
+    SyncTransaction transaction(_hal);
+
+    _hal->command(DISPLAY_UPDATE_CONTROL_2);
+    _hal->data(0xC7);
+
+    _hal->command(MASTER_ACTIVATION);
 }
 
 void EPaperDisplay::setFrame(
@@ -261,6 +135,8 @@ void EPaperDisplay::setFrame(
     size_t buffer_width, size_t buffer_height
 )
 {
+    Transaction transaction(_hal);
+
     if (buffer_width > width
         || buffer_width % 8
         || buffer_height > height)
@@ -273,50 +149,54 @@ void EPaperDisplay::setFrame(
 
     for (size_t y = 0; y < buffer_height; y++) {
         setAddress(0, y);
-        command_start(WRITE_RAM_BW);
-        command_data(&black_buffer[y * data_width], data_width);
-        command_end();
+        _hal->command(WRITE_RAM_BW);
+        _hal->data_n(&black_buffer[y * data_width], data_width);
     }
 
     for (size_t y = 0; y < buffer_height; y++) {
         setAddress(0, y);
-        command_start(WRITE_RAM_RED);
-        command_data(&red_buffer[y * data_width], data_width);
-        command_end();
+        _hal->command(WRITE_RAM_RED);
+        _hal->data_n(&red_buffer[y * data_width], data_width);
     }
 }
 
 
 void EPaperDisplay::clearFrame()
 {
-    setAddressWindow(0, 0, width - 1, height - 1);
-
+    Transaction transaction(_hal);
     size_t buffer_width = width / 8;
+
+    setAddressWindow(0, 0, width - 1, height - 1);
 
     for (size_t y = 0; y < height; y++) {
         setAddress(0, y);
-        command_start(WRITE_RAM_BW);
-        for (size_t x = 0; x < buffer_width; x++) command_data(0xFF);
-        command_end();
+
+        _hal->command(WRITE_RAM_BW);
+        for (size_t x = 0; x < buffer_width; x++) {
+            _hal->data(0xFF);
+        }
     }
 
     for (size_t y = 0; y < height; y++) {
         setAddress(0, y);
-        command_start(WRITE_RAM_RED);
-        for (size_t x = 0; x < buffer_width; x++) command_data(0x00);
-        command_end();
+
+        _hal->command(WRITE_RAM_RED);
+        for (size_t x = 0; x < buffer_width; x++) {
+            _hal->data(0x00);
+        }
     }
 }
 
 void EPaperDisplay::setAddressWindow(size_t x_start, size_t y_start, size_t x_end, size_t y_end)
 {
-    command(
-        SET_RAM_X_ADDRESS_START_END_POSITION,
+    _hal->command(SET_RAM_X_ADDRESS_START_END_POSITION);
+    _hal->data(
         (x_start >> 3) & 0xFF,
         (x_end >> 3) & 0xFF
     );
-    command(
-        SET_RAM_Y_ADDRESS_START_END_POSITION,
+
+    _hal->command(SET_RAM_Y_ADDRESS_START_END_POSITION);
+    _hal->data(
         y_start & 0xFF,
         (y_start >> 8) & 0xFF,
         y_end & 0xFF,
@@ -326,12 +206,13 @@ void EPaperDisplay::setAddressWindow(size_t x_start, size_t y_start, size_t x_en
 
 void EPaperDisplay::setAddress(size_t x, size_t y)
 {
-    command(
-        SET_RAM_X_ADDRESS_COUNTER,
+    _hal->command(SET_RAM_X_ADDRESS_COUNTER);
+    _hal->data(
         (x >> 3) & 0xFF
     );
-    command(
-        SET_RAM_Y_ADDRESS_COUNTER,
+
+    _hal->command(SET_RAM_Y_ADDRESS_COUNTER);
+    _hal->data(
         y & 0xFF,
         (y >> 8) & 0xFF
     );

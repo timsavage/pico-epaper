@@ -15,9 +15,8 @@ const uint LED_PIN = 25;
 #define PIN_DC    20
 #define PIN_BUSY  21
 
-Display::EPaperDisplay display(
-    spi0, PIN_MISO, PIN_CS, PIN_SCK, PIN_MOSI, PIN_DC, PIN_RESET, PIN_BUSY
-);
+Display::EPaperSPI spiHal(spi0, PIN_MISO, PIN_CS, PIN_SCK, PIN_MOSI, PIN_DC, PIN_RESET, PIN_BUSY);
+Display::EPaperDisplay display(&spiHal);
 
 static inline void toggleLed()
 {
@@ -33,6 +32,7 @@ void setup()
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
     printf("Setup Display\n");
+    spiHal.setup();
     display.init();
 }
 

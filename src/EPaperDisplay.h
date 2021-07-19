@@ -3,6 +3,8 @@
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 
+#include "EPaperHAL.h"
+
 #define PIN_MISO  16
 #define PIN_CS    17
 #define PIN_SCK   18  // SCL
@@ -21,36 +23,9 @@ namespace Display {
     public:
         /**
          * Constructor
-         * @param spi SPI port
-         * @param pin_miso MISO Pin
-         * @param pin_cs Chip Select Pin
-         * @param pin_scl SPI Clock
-         * @param pin_mosi MOSI Pin
-         * @param pin_dc Data/Control pin
-         * @param pin_reset Reset pin (used to reset the display)
-         * @param pin_busy Indicates if the display is busy
          */
-        EPaperDisplay(
-            spi_inst_t * spi,
-            uint pin_miso,
-            uint pin_cs,
-            uint pin_scl,
-            uint pin_mosi,
-            uint pin_dc,
-            uint pin_reset,
-            uint pin_busy
-        );
+        EPaperDisplay(EPaperHAL *hal);
         ~EPaperDisplay();
-
-        /**
-         * Hardware setup
-         */
-        uint setup();
-
-        /**
-         * Reset display
-         */
-        void reset() const;
 
         /**
          * Initialise display
@@ -87,27 +62,9 @@ namespace Display {
 
     private:
 
-        void command(uint8_t cmd);
-        void command(uint8_t cmd, uint8_t d1);
-        void command(uint8_t cmd, uint8_t d1, uint8_t d2);
-        void command(uint8_t cmd, uint8_t d1, uint8_t d2, uint8_t d3);
-        void command(uint8_t cmd, uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4);
-        void command_start(uint8_t cmd);
-        void command_data(uint8_t data);
-        void command_data(const uint8_t *data, size_t len);
-        void command_end() const;
-
-        void waitUntilIdle() const;
         void setAddressWindow(size_t x_start, size_t y_start, size_t x_end, size_t y_end);
         void setAddress(size_t x, size_t y);
 
-        spi_inst_t *_spi;
-        uint _pin_miso;
-        uint _pin_cs;
-        uint _pin_scl;
-        uint _pin_mosi;
-        uint _pin_dc;
-        uint _pin_reset;
-        uint _pin_busy;
+        EPaperHAL *_hal;
     };
 }
