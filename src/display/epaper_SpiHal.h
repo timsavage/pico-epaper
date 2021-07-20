@@ -3,61 +3,15 @@
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 
-namespace Display
-{
-    class EPaperHAL
-    {
-    public:
-        /**
-         * Hardware setup
-         */
-        virtual uint setup() = 0;
+#include "epaper_Hal.h"
 
-        /**
-         * Reset display
-         */
-        virtual void reset() const = 0;
-
-        /**
-         * Wait for the busy line to clear
-         */
-        virtual void waitUntilIdle() const = 0;
-
-        /**
-         * Start a transaction with the display
-         */
-        virtual void startTransaction() const = 0;
-
-        /**
-         * End transaction with display
-         */
-        virtual void endTransaction() const = 0;
-
-        /**
-         * Start a command
-         * @param cmd Command to send
-         */
-        virtual void command(uint8_t cmd) = 0;
-
-        /**
-         * Send command data
-         */
-        virtual void data(uint8_t d1) = 0;
-        virtual void data(uint8_t d1, uint8_t d2) = 0;
-        virtual void data(uint8_t d1, uint8_t d2, uint8_t d3) = 0;
-        virtual void data(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4) = 0;
-
-        /**
-         * Send command data from a buffer
-         */
-        virtual void data_n(const uint8_t *data, size_t len) = 0;
-    };
-
+namespace display {
+namespace epaper {
 
     /**
-     * SPI Interface for EPaperDisplay
+     * SPI Interface for epaper::Display
      */
-    class EPaperSPI : public EPaperHAL{
+    class SpiHal : public Hal{
     public:
         /**
          * Constructor
@@ -70,7 +24,7 @@ namespace Display
          * @param pin_reset Reset pin (used to reset the display)
          * @param pin_busy Indicates if the display is busy
          */
-        EPaperSPI(
+        SpiHal(
             spi_inst_t * spi,
             uint pin_miso,
             uint pin_cs,
@@ -80,7 +34,7 @@ namespace Display
             uint pin_reset,
             uint pin_busy
         );
-        ~EPaperSPI();
+        ~SpiHal();
 
         /**
          * Hardware setup
@@ -124,30 +78,5 @@ namespace Display
         uint _pin_busy;
     };
 
-    /**
-     * Basic transaction
-     */
-    class Transaction
-    {
-    public:
-        Transaction(EPaperHAL *hal);
-        ~Transaction();
-
-    private:
-        EPaperHAL *_hal;
-    };
-
-    /**
-     * Synchronous transaction that waits for busy signal to be cleared on end.
-     */
-    class SyncTransaction
-    {
-    public:
-        SyncTransaction(EPaperHAL *hal);
-        ~SyncTransaction();
-
-    private:
-        EPaperHAL *_hal;
-    };
-
-}; // !Display
+}  // !epaper
+}  // !display

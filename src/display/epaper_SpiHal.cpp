@@ -1,8 +1,8 @@
-#include "EPaperHAL.h"
+#include "epaper_SpiHal.h"
 
-using namespace Display;
+using namespace display::epaper;
 
-EPaperSPI::EPaperSPI(
+SpiHal::SpiHal(
     spi_inst_t *spi,
     uint pin_miso,
     uint pin_cs,
@@ -22,9 +22,9 @@ EPaperSPI::EPaperSPI(
   _pin_busy(pin_busy)
 { }
 
-EPaperSPI::~EPaperSPI() = default;
+SpiHal::~SpiHal() = default;
 
-uint EPaperSPI::setup()
+uint SpiHal::setup()
 {
     // Configure SPI
     spi_init(_spi, 4000 * 1000); // 4Mbps
@@ -50,7 +50,7 @@ uint EPaperSPI::setup()
     return 0;
 }
 
-void EPaperSPI::reset() const
+void SpiHal::reset() const
 {
     gpio_put(_pin_reset, false);
     sleep_ms(200);
@@ -59,37 +59,37 @@ void EPaperSPI::reset() const
 }
 
 
-void EPaperSPI::startTransaction() const
+void SpiHal::startTransaction() const
 {
     gpio_put(_pin_cs, false);
 }
 
-void EPaperSPI::command(uint8_t cmd)
+void SpiHal::command(uint8_t cmd)
 {
     gpio_put(_pin_dc, false);
     spi_write_blocking(_spi, &cmd, 1);
     gpio_put(_pin_dc, true);
 }
 
-void EPaperSPI::data(uint8_t d1)
+void SpiHal::data(uint8_t d1)
 {
     spi_write_blocking(_spi, &d1, 1);
 }
 
-void EPaperSPI::data(uint8_t d1, uint8_t d2)
+void SpiHal::data(uint8_t d1, uint8_t d2)
 {
     spi_write_blocking(_spi, &d1, 1);
     spi_write_blocking(_spi, &d2, 1);
 }
 
-void EPaperSPI::data(uint8_t d1, uint8_t d2, uint8_t d3)
+void SpiHal::data(uint8_t d1, uint8_t d2, uint8_t d3)
 {
     spi_write_blocking(_spi, &d1, 1);
     spi_write_blocking(_spi, &d2, 1);
     spi_write_blocking(_spi, &d3, 1);
 }
 
-void EPaperSPI::data(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4)
+void SpiHal::data(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4)
 {
     spi_write_blocking(_spi, &d1, 1);
     spi_write_blocking(_spi, &d2, 1);
@@ -97,43 +97,19 @@ void EPaperSPI::data(uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4)
     spi_write_blocking(_spi, &d4, 1);
 }
 
-void EPaperSPI::data_n(const uint8_t *data, size_t len)
+void SpiHal::data_n(const uint8_t *data, size_t len)
 {
     spi_write_blocking(_spi, data, len);
 }
 
-void EPaperSPI::endTransaction() const
+void SpiHal::endTransaction() const
 {
     gpio_put(_pin_cs, true);
 }
 
-void EPaperSPI::waitUntilIdle() const
+void SpiHal::waitUntilIdle() const
 {
     while (gpio_get(_pin_busy)) {
         sleep_ms(100);
     }
 }
-
-Transaction::Transaction(EPaperHAL *hal)
-{
-    _hal = hal;
-    _hal->startTransaction();
-}
-
-Transaction::~Transaction()
-{
-    _hal->endTransaction();
-}
-
-SyncTransaction::SyncTransaction(EPaperHAL *hal)
-{
-    _hal = hal;
-    _hal->startTransaction();
-}
-
-SyncTransaction::~SyncTransaction()
-{
-    _hal->endTransaction();
-    _hal->waitUntilIdle();
-}
-

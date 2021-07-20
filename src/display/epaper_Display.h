@@ -1,9 +1,8 @@
 #pragma once
 
 #include "pico/stdlib.h"
-#include "hardware/spi.h"
 
-#include "EPaperHAL.h"
+#include "epaper_Hal.h"
 
 #define PIN_MISO  16
 #define PIN_CS    17
@@ -17,15 +16,18 @@
 #define EPD_HEIGHT      296
 #define EPD_BUFFER_SIZE ((EPD_WIDTH / 8) * EPD_HEIGHT)
 
-namespace Display {
+namespace display {
+namespace epaper {
 
-    class EPaperDisplay {
+    class Display
+    {
     public:
         /**
          * Constructor
          */
-        EPaperDisplay(EPaperHAL *hal);
-        ~EPaperDisplay();
+        explicit Display(Hal *hal);
+
+        ~Display();
 
         /**
          * Initialise display
@@ -46,8 +48,8 @@ namespace Display {
          * Set frame
          */
         void setFrame(
-            const uint8_t* black_buffer,
-            const uint8_t* red_buffer,
+            const uint8_t *black_buffer,
+            const uint8_t *red_buffer,
             size_t buffer_width,
             size_t buffer_height
         );
@@ -63,8 +65,11 @@ namespace Display {
     private:
 
         void setAddressWindow(size_t x_start, size_t y_start, size_t x_end, size_t y_end);
+
         void setAddress(size_t x, size_t y);
 
-        EPaperHAL *_hal;
+        Hal *_hal;
     };
-}
+
+} // !epaper
+} // !display

@@ -1,4 +1,5 @@
-#include "EPaperDisplay.h"
+#include "epaper_Display.h"
+#include "epaper_Transaction.h"
 
 #define DRIVER_OUTPUT_CONTROL                       0x01
 #define GATE_DRIVING_CONTROL                        0x03
@@ -48,17 +49,17 @@
 #define SET_DIGITAL_BLOCK_CONTROL                   0x7E
 #define NOP                                         0x7F
 
-using namespace Display;
+using namespace display::epaper;
 
-EPaperDisplay::EPaperDisplay(EPaperHAL *hal)
+Display::Display(Hal *hal)
 : width(EPD_WIDTH),
   height(EPD_HEIGHT),
   _hal(hal)
 { }
 
-EPaperDisplay::~EPaperDisplay() = default;
+Display::~Display() = default;
 
-uint EPaperDisplay::init()
+uint Display::init()
 {
     _hal->reset();
 
@@ -112,7 +113,7 @@ uint EPaperDisplay::init()
     return 0;
 }
 
-void EPaperDisplay::sleep()
+void Display::sleep()
 {
     SyncTransaction transaction(_hal);
 
@@ -120,7 +121,7 @@ void EPaperDisplay::sleep()
     _hal->data(0x01);
 }
 
-void EPaperDisplay::flip()
+void Display::flip()
 {
     SyncTransaction transaction(_hal);
 
@@ -130,7 +131,7 @@ void EPaperDisplay::flip()
     _hal->command(MASTER_ACTIVATION);
 }
 
-void EPaperDisplay::setFrame(
+void Display::setFrame(
     const uint8_t* black_buffer, const uint8_t* red_buffer,
     size_t buffer_width, size_t buffer_height
 )
@@ -161,7 +162,7 @@ void EPaperDisplay::setFrame(
 }
 
 
-void EPaperDisplay::clearFrame()
+void Display::clearFrame()
 {
     Transaction transaction(_hal);
     size_t buffer_width = width / 8;
@@ -187,7 +188,7 @@ void EPaperDisplay::clearFrame()
     }
 }
 
-void EPaperDisplay::setAddressWindow(size_t x_start, size_t y_start, size_t x_end, size_t y_end)
+void Display::setAddressWindow(size_t x_start, size_t y_start, size_t x_end, size_t y_end)
 {
     _hal->command(SET_RAM_X_ADDRESS_START_END_POSITION);
     _hal->data(
@@ -204,7 +205,7 @@ void EPaperDisplay::setAddressWindow(size_t x_start, size_t y_start, size_t x_en
     );
 }
 
-void EPaperDisplay::setAddress(size_t x, size_t y)
+void Display::setAddress(size_t x, size_t y)
 {
     _hal->command(SET_RAM_X_ADDRESS_COUNTER);
     _hal->data(

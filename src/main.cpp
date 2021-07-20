@@ -2,7 +2,8 @@
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 
-#include "EPaperDisplay.h"
+#include "display/epaper_SpiHal.h"
+#include "display/epaper_Display.h"
 #include "images.h"
 
 const uint LED_PIN = 25;
@@ -15,8 +16,8 @@ const uint LED_PIN = 25;
 #define PIN_DC    20
 #define PIN_BUSY  21
 
-Display::EPaperSPI spiHal(spi0, PIN_MISO, PIN_CS, PIN_SCK, PIN_MOSI, PIN_DC, PIN_RESET, PIN_BUSY);
-Display::EPaperDisplay display(&spiHal);
+display::epaper::SpiHal spiHal(spi0, PIN_MISO, PIN_CS, PIN_SCK, PIN_MOSI, PIN_DC, PIN_RESET, PIN_BUSY);
+display::epaper::Display epaper(&spiHal);
 
 static inline void toggleLed()
 {
@@ -33,21 +34,21 @@ void setup()
 
     printf("Setup Display\n");
     spiHal.setup();
-    display.init();
+    epaper.init();
 }
 
 int main() {
     setup();
 
     printf("Set Frame\n");
-    display.clearFrame();
-    display.setFrame(SGV_BLACK, SGV_RED, display.width, 152);
+    epaper.clearFrame();
+    epaper.setFrame(SGV_BLACK, SGV_RED, epaper.width, 152);
 
     printf("Flip\n");
-    display.flip();
+    epaper.flip();
 
     printf("Sleep\n");
-    display.sleep();
+    epaper.sleep();
 
     while (true) {
         toggleLed();
