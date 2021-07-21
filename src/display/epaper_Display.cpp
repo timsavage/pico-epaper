@@ -131,6 +131,49 @@ void Display::flip()
     _hal->command(MASTER_ACTIVATION);
 }
 
+size_t Display::drawCanvas(graphics::Canvas1Bit *canvas, uint8_t layer)
+{
+    return drawCanvas(canvas, layer, 0, 0);
+}
+
+size_t Display::drawCanvas(graphics::Canvas1Bit *canvas, uint8_t layer, size_t x_offset, size_t y_offset)
+{
+    auto buffer_width = canvas->getWidth();
+    if (x_offset % 8 || buffer_width % 8) {
+        // Must be a blocks of 8
+        return 1;
+    }
+
+    Transaction transaction(_hal);
+
+    // Calculate block offsets
+    auto window_width = buffer_width;
+    if ((x_offset + window_width) > width) {
+        window_width = (width - x_offset);
+    }
+    auto window_height = canvas->getHeight();
+    if ((y_offset + window_height) > height) {
+        window_height = (height - y_offset);
+    }
+
+    setAddressWindow(x_offset, y_offset, x_offset + window_width - 1, y_offset + window_height - 1);
+
+    // Convert to bytes
+    buffer_width /= 8;
+    x_offset /= 8;
+    window_width /= 8;
+
+    const uint8_t *buffer = canvas->getBuffer();
+
+    for (size_t y_idx = 0; y_idx < window_height; y_idx++) {
+        setAddress(x_offset, y_offset + y_idx);
+        _hal->command(layer ? WRITE_RAM_RED : WRITE_RAM_BW);
+        _hal->data_n(&buffer[y_idx * buffer_width], window_width);
+    }
+
+    return 0;
+}
+
 void Display::setFrame(
     const uint8_t* black_buffer, const uint8_t* red_buffer,
     size_t buffer_width, size_t buffer_height

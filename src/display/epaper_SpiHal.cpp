@@ -1,3 +1,4 @@
+#include "hardware/gpio.h"
 #include "epaper_SpiHal.h"
 
 using namespace display::epaper;

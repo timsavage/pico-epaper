@@ -1,20 +1,15 @@
 #pragma once
 
-#include "pico/stdlib.h"
+#include "pico.h"
 
 #include "epaper_Hal.h"
+#include "graphics_Canvas.h"
 
-#define PIN_MISO  16
-#define PIN_CS    17
-#define PIN_SCK   18  // SCL
-#define PIN_MOSI  19  // SDA
-#define PIN_RESET 22
-#define PIN_DC    20
-#define PIN_BUSY  21
+#define EPD_WIDTH   152
+#define EPD_HEIGHT  296
 
-#define EPD_WIDTH       152
-#define EPD_HEIGHT      296
-#define EPD_BUFFER_SIZE ((EPD_WIDTH / 8) * EPD_HEIGHT)
+#define EPD_LAYER_BLACK = 0
+#define EPD_LAYER_RED = 1
 
 namespace display {
 namespace epaper {
@@ -43,6 +38,12 @@ namespace epaper {
          * Flip display buffers
          */
         void flip();
+
+        /**
+         * Draw a canvas to the display
+         */
+        size_t drawCanvas(graphics::Canvas1Bit *canvas, uint8_t layer);
+        size_t drawCanvas(graphics::Canvas1Bit *canvas, uint8_t layer, size_t x, size_t y);
 
         /**
          * Set frame

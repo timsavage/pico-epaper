@@ -1,9 +1,17 @@
 #pragma once
 
-#include "pico/stdlib.h"
+#include "pico.h"
 #include "hardware/spi.h"
 
 #include "epaper_Hal.h"
+
+#define PIN_MISO    16
+#define PIN_CS      17
+#define PIN_SCK     18  // SCL
+#define PIN_MOSI    19  // SDA
+#define PIN_RESET   22
+#define PIN_DC      20
+#define PIN_BUSY    21
 
 namespace display {
 namespace epaper {

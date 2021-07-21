@@ -1,7 +1,5 @@
 #pragma once
 
-#include "hardware/spi.h"
-
 #include "epaper_Hal.h"
 
 namespace display {

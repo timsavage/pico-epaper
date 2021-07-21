@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pico/stdlib.h"
+#include "pico.h"
 
 namespace display {
 namespace epaper {

@@ -1,9 +1,10 @@
-#include <stdio.h>
+#include <cstdio>
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 
 #include "display/epaper_SpiHal.h"
 #include "display/epaper_Display.h"
+#include "display/graphics_Canvas.h"
 #include "images.h"
 
 const uint LED_PIN = 25;
@@ -18,6 +19,8 @@ const uint LED_PIN = 25;
 
 display::epaper::SpiHal spiHal(spi0, PIN_MISO, PIN_CS, PIN_SCK, PIN_MOSI, PIN_DC, PIN_RESET, PIN_BUSY);
 display::epaper::Display epaper(&spiHal);
+
+graphics::Canvas1Bit canvas(epaper.width, epaper.height);
 
 static inline void toggleLed()
 {
@@ -43,6 +46,25 @@ int main() {
     printf("Set Frame\n");
     epaper.clearFrame();
     epaper.setFrame(SGV_BLACK, SGV_RED, epaper.width, 152);
+
+    canvas.drawPixel(10, 0, 1);
+    canvas.drawPixel(11, 0, 1);
+    canvas.drawPixel(12, 0, 1);
+    canvas.drawPixel(13, 0, 1);
+    canvas.drawPixel(14, 0, 1);
+    canvas.drawPixel(15, 0, 1);
+    canvas.drawPixel(16, 0, 1);
+    canvas.drawPixel(13, 1, 1);
+    canvas.drawPixel(13, 2, 1);
+    canvas.drawPixel(13, 3, 1);
+    canvas.drawPixel(13, 4, 1);
+    canvas.drawPixel(13, 5, 1);
+    canvas.drawPixel(13, 6, 1);
+    canvas.drawPixel(13, 7, 1);
+    canvas.drawPixel(13, 8, 1);
+    canvas.drawPixel(13, 9, 1);
+
+    epaper.drawCanvas(&canvas, 1, 0, 160);
 
     printf("Flip\n");
     epaper.flip();
