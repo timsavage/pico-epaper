@@ -20,12 +20,14 @@ public:
     /**
      * Draw a single pixel to the display
      */
-    virtual void drawPixel(size_t x, size_t y, uint16_t colour) = 0;
+    virtual void setPixel(size_t x, size_t y, uint16_t colour) = 0;
+    virtual uint16_t getPixel(size_t x, size_t y) = 0;
 
-    /**
-     * Invert colours
-     */
+    virtual void drawVLine(size_t x, size_t y, size_t length, uint16_t colour) = 0;
+    virtual void drawHLine(size_t x, size_t y, size_t length, uint16_t colour) = 0;
+
     virtual void invert() = 0;
+    virtual void fill(uint16_t colour) = 0;
 
 protected:
     size_t _width;
@@ -41,17 +43,21 @@ class Canvas1Bit : public Canvas
 {
 public:
     Canvas1Bit(size_t width, size_t height);
-    Canvas1Bit(size_t width, size_t height, uint8_t *bytes);
     ~Canvas1Bit();
 
-    virtual void drawPixel(size_t x, size_t y, uint16_t colour);
+    virtual void setPixel(size_t x, size_t y, uint16_t colour);
+    virtual uint16_t getPixel(size_t x, size_t y);
+    virtual void drawVLine(size_t x, size_t y, size_t length, uint16_t colour);
+    virtual void drawHLine(size_t x, size_t y, size_t length, uint16_t colour);
     virtual void invert();
+    virtual void fill(uint16_t colour);
 
     size_t bufferLen();
     const uint8_t* getBuffer();
 
 private:
-    size_t _buffer_len;
+    size_t _row_len;  // Length of an individual row in bytes
+    size_t _buffer_len;  // Length of buffer in bytes
     uint8_t *_buffer;
 
 };
